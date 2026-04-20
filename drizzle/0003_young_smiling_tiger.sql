@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `calendlyUrl` varchar(512);
