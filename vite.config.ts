@@ -1,10 +1,10 @@
-import { jsxLocPlugin } from "@builder.io/vite-plugin-jsx-loc";
+// @builder.io/vite-plugin-jsx-loc entfernt (Manus-Dev-Tool, nicht für Railway benötigt)
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import path from "node:path";
 import { defineConfig, type Plugin, type ViteDevServer } from "vite";
-import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
+// vite-plugin-manus-runtime entfernt (Manus-intern, nicht auf Railway verfügbar)
 
 // =============================================================================
 // Manus Debug Collector - Vite Plugin
@@ -150,7 +150,8 @@ function vitePluginManusDebugCollector(): Plugin {
   };
 }
 
-const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()];
+// vitePluginManusRuntime() + jsxLocPlugin() entfernt für Railway-Deployment
+const plugins = [react(), tailwindcss(), vitePluginManusDebugCollector()];
 
 export default defineConfig({
   plugins,
@@ -176,6 +177,8 @@ export default defineConfig({
       ".manus-asia.computer",
       ".manuscomputer.ai",
       ".manusvm.computer",
+      ".railway.app",
+      ".up.railway.app",
       "localhost",
       "127.0.0.1",
     ],
