@@ -179,7 +179,8 @@ function TherapeutContent({ activeTab }: { activeTab: string }) {
                         )}
                       </td>
                       <td className="py-3 text-right">
-                        {(session.status === "pending" || session.status === "confirmed") && (
+                        {/* Muhannad: DB-Status ist 'scheduled', nicht 'pending'/'confirmed' */}
+                        {(session.status === "pending" || session.status === "confirmed" || session.status === "scheduled") && (
                           <Button
                             size="sm"
                             variant="outline"

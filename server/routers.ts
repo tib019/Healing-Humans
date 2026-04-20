@@ -91,8 +91,11 @@ const patientRouter = router({
       therapeutId: s.therapeut_id,
       therapeutName: Array.isArray(s.profiles) ? (s.profiles[0]?.full_name ?? "Unbekannt") : (s.profiles?.full_name ?? "Unbekannt"),
       status: s.status,
-      rating: s.rating ?? null,
-      scheduledAt: s.scheduled_at ?? s.created_at ?? null,
+      // Muhannad: rating kommt jetzt aus reviews, nicht aus sessions.rating
+      rating: s.reviews?.rating ?? null,
+      feedback: s.reviews?.comment ?? null,
+      // scheduled_at existiert nicht in der DB — wir nutzen created_at
+      scheduledAt: s.created_at,
       createdAt: s.created_at,
     }));
     return { sessions };
@@ -219,8 +222,11 @@ const therapeutRouter = router({
       patientName: Array.isArray(s.profiles) ? (s.profiles[0]?.full_name ?? "Unbekannt") : (s.profiles?.full_name ?? "Unbekannt"),
       patientEmail: null as string | null,  // profiles table has no email column
       status: s.status,
-      rating: s.rating ?? null,
-      scheduledAt: s.scheduled_at ?? s.created_at ?? null,
+      // Muhannad: rating kommt jetzt aus reviews, nicht aus sessions.rating
+      rating: s.reviews?.rating ?? null,
+      feedback: s.reviews?.comment ?? null,
+      // scheduled_at existiert nicht in der DB — wir nutzen created_at
+      scheduledAt: s.created_at,
       createdAt: s.created_at,
     }));
     return { sessions };

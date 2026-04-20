@@ -109,9 +109,11 @@ export async function insertCoinTransaction(
 /** Get sessions for a patient */
 export async function getPatientSessions(patientId: string) {
   const sb = getSupabase();
+  // Muhannad: ratings kommen jetzt aus reviews, nicht aus sessions.rating
+  // scheduled_at existiert nicht in der DB — nur created_at
   const { data, error } = await sb
     .from("sessions")
-    .select("id, therapeut_id, status, rating, created_at, scheduled_at, profiles!sessions_therapeut_id_fkey(full_name)")
+    .select("id, therapeut_id, status, created_at, profiles!sessions_therapeut_id_fkey(full_name), reviews(rating, comment)")
     .eq("patient_id", patientId)
     .order("created_at", { ascending: false });
   if (error) return [];
@@ -121,9 +123,11 @@ export async function getPatientSessions(patientId: string) {
 /** Get sessions for a therapeut */
 export async function getTherapeutSessions(therapeutId: string) {
   const sb = getSupabase();
+  // Muhannad: ratings kommen jetzt aus reviews, nicht aus sessions.rating
+  // scheduled_at existiert nicht in der DB — nur created_at
   const { data, error } = await sb
     .from("sessions")
-    .select("id, patient_id, status, rating, created_at, scheduled_at, profiles!sessions_patient_id_fkey(full_name)")
+    .select("id, patient_id, status, created_at, profiles!sessions_patient_id_fkey(full_name), reviews(rating, comment)")
     .eq("therapeut_id", therapeutId)
     .order("created_at", { ascending: false });
   if (error) return [];
@@ -156,7 +160,8 @@ export async function bookSession(patientId: string, therapeutId: string) {
   // Create session
   const { data: session, error: sessionError } = await sb
     .from("sessions")
-    .insert({ patient_id: patientId, therapeut_id: therapeutId, status: "pending" })
+    // Muhannad: neuer Session-Status ist 'scheduled', nicht 'pending'
+    .insert({ patient_id: patientId, therapeut_id: therapeutId, status: "scheduled" })
     .select("id")
     .single();
   if (sessionError) throw new Error(sessionError.message);
