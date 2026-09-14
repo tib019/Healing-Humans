@@ -1,0 +1,80 @@
+name: Release
+
+# Legt beim Stand auf dem Standard-Branch das Tag zur aktuellen Version an und
+# veroeffentlicht den passenden Changelog-Abschnitt als GitHub-Release.
+#
+# Die Version wird aus CHANGELOG.md gelesen (oberster "## [x.y.z]"-Abschnitt) —
+# damit funktioniert derselbe Workflow unabhaengig davon, ob das Repo seine
+# Version in package.json, pyproject.toml oder einer VERSION-Datei fuehrt.
+#
+# Der Lauf ist wiederholbar: existiert das Tag bereits, passiert nichts.
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    name: Tag und Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Version aus dem Changelog lesen
+        id: version
+        run: |
+          if [ ! -f CHANGELOG.md ]; then
+            echo "::error::CHANGELOG.md fehlt — ohne sie ist keine Version bestimmbar."
+            exit 1
+          fi
+          version=$(sed -n 's/^## \[\([0-9][0-9.]*\)\].*/\1/p' CHANGELOG.md | head -1)
+          if [ -z "$version" ]; then
+            echo "::error::Kein Abschnitt der Form '## [x.y.z]' in CHANGELOG.md gefunden."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Version laut Changelog: $version"
+
+      - name: Prüfen, ob das Tag schon existiert
+        id: check
+        run: |
+          tag="v${{ steps.version.outputs.version }}"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "$tag ist bereits vergeben — nichts zu tun."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Tag anlegen
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          tag="v${{ steps.version.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$tag" -m "Release $tag"
+          git push origin "$tag"
+
+      - name: Release mit Changelog-Abschnitt veröffentlichen
+        if: steps.check.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          awk -v v="$version" '
+            index($0, "## [" v "]") == 1 { flag = 1; next }
+            flag && /^## \[/ { exit }
+            flag { print }
+          ' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "Changelog-Abschnitt leer — Release ohne Notizen." > release-notes.md
+          fi
+          gh release create "v$version" \
+            --title "v$version" \
+            --notes-file release-notes.md
