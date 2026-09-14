@@ -1,4 +1,54 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+/**
+ * Die Supabase-Schicht wird gemockt. Zuvor liefen fuenf Faelle gegen den echten
+ * Client und schlugen ohne hinterlegte Zugangsdaten mit "Supabase credentials
+ * not configured" fehl — sie pruefen aber Router-Logik, nicht Supabase. Mit
+ * deterministischen Doubles laeuft die Suite ohne Netz und ohne Secrets und
+ * die Aussage bleibt dieselbe.
+ */
+vi.mock("./supabase", () => ({
+  getSupabase: () => {
+    throw new Error("Supabase credentials not configured");
+  },
+  getProfileById: async () => ({
+    id: "00000000-0000-0000-0000-000000000001",
+    full_name: "Test Nutzer",
+    role: "patient",
+    coins_balance: 42,
+  }),
+  getAllProfiles: async () => [],
+  getTherapeutProfiles: async () => [],
+  getCoinTransactions: async () => [],
+  insertCoinTransaction: async () => undefined,
+  getPatientSessions: async () => [],
+  getTherapeutSessions: async () => [],
+  markSessionDone: async () => undefined,
+  bookSession: async () => {
+    throw new Error("Nicht genug Coins (mindestens 7 erforderlich)");
+  },
+  getUserReferrals: async () => [],
+  createReferral: async () => "TESTTOKEN123",
+  // Bildet den Fall "Sitzung existiert nicht" ab: der echte Helper wirft,
+  // wenn das Insert in reviews fehlschlaegt.
+  submitReview: async () => {
+    throw new Error("Sitzung nicht gefunden");
+  },
+  getTherapistReviews: async () => [],
+  getAllBillingRequests: async () => [],
+  updateBillingStatus: async () => undefined,
+  getAdminStats: async () => ({
+    totalUsers: 0,
+    totalPatients: 0,
+    totalTherapists: 0,
+    totalCoins: 0,
+    openSessions: 0,
+    completedSessions: 0,
+    pendingBilling: 0,
+    totalBillingAmount: 0,
+  }),
+}));
+
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
 
