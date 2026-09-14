@@ -1,5 +1,8 @@
 # Healing Humans Dashboard
 
+![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)
+![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)
+
 Rollenbasiertes Web-Dashboard für eine telemedizinische Therapieplattform. Patienten buchen Sitzungen, verfolgen ein Coin-Prämiensystem und geben Bewertungen ab. Therapeuten verwalten ihre Sitzungen. Admins kontrollieren Nutzer, Abrechnung, Coins und Calendly-Integrationen.
 
 ## Architektur
